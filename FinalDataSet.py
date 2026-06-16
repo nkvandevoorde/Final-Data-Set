@@ -8,7 +8,7 @@ from rapidfuzz import fuzz
 import re
 
 cnes_wb = load_workbook("Final_CNES_data_Cleaned.xlsx").active
-rel_wb = load_workbook("Clean_Relatorio_Book.xlsx").active
+rel_wb = load_workbook("/Users/noravandevoorde/Downloads/SPHERE/Clean_Relatorio_Book.xlsx").active
 
 # #Print column names in both datasets
 # print("Columns in CNES dataset:", [cell.value for cell in cnes_wb[1] if cell.value is not None])
@@ -81,19 +81,20 @@ rel_wb = load_workbook("Clean_Relatorio_Book.xlsx").active
 # rel_wb.parent.save("Clean_Relatorio_Book.xlsx")
 
 #Create new sheet to combine relevant data
-new_sheet = rel_wb.parent.create_sheet("Final Data")
+new_wb = rel_wb.parent.create_sheet("Final Data")
 #add columns
-new_sheet.append(["CNES", "State", "City", "ZIP Code (sheet)", "ZIP Code (site)", "Address(sheet)", "Address(site)", "Latitude (Relatorio)", 
+new_wb.append(["CNES", "State", "City", "ZIP Code (sheet)", "ZIP Code (site)", "Address(sheet)", "Address(site)", "Latitude (Relatorio)", 
                   "Longitude (Relatorio)", "Latitude (CNES)", "Longitude (CNES)", "REGIC Label"])
 
 #Check for matching CNES numbers between the two datasets
 #Extract CNES and Relatório numbers
-cnes_numbers = [str(cell.value).strip() for cell in cnes_wb['C'] if cell.value is not None] #CNES in column C
-rel_numbers = [str(cell.value).strip() for cell in rel_wb['B'] if cell.value is not None] #Relatório in column B
+cnes_numbers = [str(cell.value).strip() for cell in cnes_wb['C'][1:] if cell.value is not None] #CNES in column C
+rel_numbers = [str(cell.value).strip() for cell in rel_wb['B'][1:] if cell.value is not None] #Relatório in column B
 #Find matches and outliers
 matching_numbers = set(cnes_numbers) & set(rel_numbers)
 cnes_outliers = set(cnes_numbers) - set(rel_numbers)
 rel_outliers = set(rel_numbers) - set(cnes_numbers)
+#print("Relatório outliers:", rel_outliers)
 print("Number of matching CNES numbers:", len(matching_numbers))
 print("Number of CNES outliers:", len(cnes_outliers))
 print("Number of Relatório outliers:", len(rel_outliers))
@@ -102,32 +103,113 @@ print("Number of Relatório outliers:", len(rel_outliers))
 cnes_library = {}
 for excel_row, row in enumerate(cnes_wb.iter_rows(min_row=2, values_only=True), start=2):
     cnes_library[excel_row] = {
-        "State": row[0],  # State in column A
-        "City": row[1],   # City in column B
-        "CNES": row[2],   # CNES in column C
-        "Latitude": row[3], # Latitude in column D
-        "Longitude": row[4], # Longitude in column E
-        "REGIC Label": row[5], # REGIC Label in column F
-        "Address": row[6], # Address in column G
+        "State": str(row[0]).strip() if row[0] is not None else "",  # State in column A
+        "City": str(row[1]).strip() if row[1] is not None else "",   # City in column B
+        "CNES": str(row[2]).strip() if row[2] is not None else "",   # CNES in column C
+        "Latitude": str(row[3]).strip() if row[3] is not None else "", # Latitude in column D
+        "Longitude": str(row[4]).strip() if row[4] is not None else "", # Longitude in column E
+        "REGIC Label": str(row[5]).strip() if row[5] is not None else "", # REGIC Label in column F
+        "Address": str(row[6]).strip() if row[6] is not None else "", # Address in column G
         }
-print(list(cnes_library.items())[:5])
+#print(list(cnes_library.items())[:5])
 
 #Create Library for Relatório sheet
 rel_library = {}
 for excel_row, row in enumerate(rel_wb.iter_rows(min_row=2, values_only=True), start=2):
         rel_library[excel_row] = {
-            "State": row[0],  # State in column A
-            "CNES": row[1],   # CNES in column B
-            "City": row[2],   # City in column C
-            "ZIP Code (sheet)": row[3], # ZIP Code in column D
-            "Address (sheet)": row[4], # Address in column E
-            "Latitude": row[6], # Latitude in column G
-            "Longitude": row[7], # Longitude in column H
-            "ZIP Code (site)": row[10], # ZIP Code in column K
-            "Address (site)": row[11], # Address in column L
+            "State": str(row[0]).strip() if row[0] is not None else "",  # State in column A
+            "CNES": str(row[1]).strip() if row[1] is not None else "",   # CNES in column B
+            "City": str(row[2]).strip() if row[2] is not None else "",   # City in column C
+            "ZIP Code (sheet)": str(row[3]).strip() if row[3] is not None else "", # ZIP Code in column D
+            "Address (sheet)": str(row[4]).strip() if row[4] is not None else "", # Address in column E
+            "Latitude": str(row[6]).strip() if row[6] is not None else "", # Latitude in column G
+            "Longitude": str(row[7]).strip() if row[7] is not None else "", # Longitude in column H
+            "ZIP Code (site)": str(row[10]).strip() if row[10] is not None else "", # ZIP Code in column K
+            "Address (site)": str(row[11]).strip() if row[11] is not None else "", # Address in column L
         }
 
-print(list(rel_library.items())[:5])
+#print(list(rel_library.items())[:5])
 
-#rel_wb.parent.save("Clean_Relatorio_Book.xlsx")
+#Create CNES matches library
+cnes_matches = {}
+for cnes_row, cnes_data in cnes_library.items():
+    for rel_row, rel_data in rel_library.items():
+        if str(cnes_data["CNES"]) == str(rel_data["CNES"]):
+            cnes_matches[cnes_row] = {
+                "CNES": str(cnes_data["CNES"]) if cnes_data["CNES"] is not None else "",
+                "State": str(cnes_data["State"]) if cnes_data["State"] is not None else "",
+                "City": str(cnes_data["City"]) if cnes_data["City"] is not None else "",
+                "ZIP Code (sheet)": str(rel_data["ZIP Code (sheet)"]) if rel_data["ZIP Code (sheet)"] is not None else "",
+                "ZIP Code (site)": str(rel_data["ZIP Code (site)"]) if rel_data["ZIP Code (site)"] is not None else "",
+                "Address (sheet)": str(rel_data["Address (sheet)"]) if rel_data["Address (sheet)"] is not None else "",
+                "Address (site)": str(rel_data["Address (site)"]) if rel_data["Address (site)"] is not None else "",
+                "Latitude (Relatorio)": str(rel_data["Latitude"]) if rel_data["Latitude"] is not None else "",
+                "Longitude (Relatorio)": str(rel_data["Longitude"]) if rel_data["Longitude"] is not None else "",
+                "Latitude (CNES)": str(cnes_data["Latitude"]) if cnes_data["Latitude"] is not None else "",
+                "Longitude (CNES)": str(cnes_data["Longitude"]) if cnes_data["Longitude"] is not None else "",
+                "REGIC Label": str(cnes_data["REGIC Label"]) if cnes_data["REGIC Label"] is not None else ""
+            }
+            break
+#print(list(cnes_matches.items())[:5])
+print("Number of CNES matches:", len(cnes_matches))
 
+#Create library for CNES outliers
+cnes_outliers_lib = {}
+for cnes_row, cnes_data in cnes_library.items():
+    if cnes_data["CNES"] not in [match["CNES"] for match in cnes_matches.values()]:
+        cnes_outliers_lib[cnes_row] = cnes_data
+
+#print(list(cnes_outliers_lib.items())[:5])
+print("Number of CNES outliers:", len(cnes_outliers_lib))
+
+#Create library for Relatório outliers
+rel_outliers_lib = {}
+for rel_row, rel_data in rel_library.items():
+    if rel_data["CNES"] not in [match["CNES"] for match in cnes_matches.values()]:
+        rel_outliers_lib[rel_row] = rel_data
+
+#print(list(rel_outliers_lib.items())[:5])
+print("Number of Relatório outliers:", len(rel_outliers_lib))
+
+#Load libraries into the columns of the new excel file
+for row, data in cnes_matches.items():
+    new_wb.active.cell(row=row, column=1).value = data["CNES"]
+    new_wb.active.cell(row=row, column=2).value = data["State"]
+    new_wb.active.cell(row=row, column=3).value = data["City"]
+    new_wb.active.cell(row=row, column=4).value = data["ZIP Code (sheet)"]
+    new_wb.active.cell(row=row, column=5).value = data["ZIP Code (site)"]
+    new_wb.active.cell(row=row, column=6).value = data["Address (sheet)"]
+    new_wb.active.cell(row=row, column=7).value = data["Address (site)"]
+    new_wb.active.cell(row=row, column=8).value = data["Latitude (Relatorio)"]
+    new_wb.active.cell(row=row, column=9).value = data["Longitude (Relatorio)"]
+    new_wb.active.cell(row=row, column=10).value = data["Latitude (CNES)"]
+    new_wb.active.cell(row=row, column=11).value = data["Longitude (CNES)"]
+    new_wb.active.cell(row=row, column=12).value = data["REGIC Label"]
+
+for row, data in cnes_outliers_lib.items():
+    new_wb.active.cell(row=row, column=13).value = data["CNES"]
+    new_wb.active.cell(row=row, column=14).value = data["State"]
+    new_wb.active.cell(row=row, column=15).value = data["City"]
+    new_wb.active.cell(row=row, column=16).value = data["ZIP Code (sheet)"]
+    new_wb.active.cell(row=row, column=17).value = data["ZIP Code (site)"]
+    new_wb.active.cell(row=row, column=18).value = data["Address (sheet)"]
+    new_wb.active.cell(row=row, column=19).value = data["Address (site)"]
+    new_wb.active.cell(row=row, column=20).value = data["Latitude (Relatorio)"]
+    new_wb.active.cell(row=row, column=21).value = data["Longitude (Relatorio)"]
+    new_wb.active.cell(row=row, column=22).value = data["Latitude (CNES)"]
+    new_wb.active.cell(row=row, column=23).value = data["Longitude (CNES)"]
+    new_wb.active.cell(row=row, column=24).value = data["REGIC Label"]
+
+for row, data in rel_outliers_lib.items():
+    new_wb.active.cell(row=row, column=25).value = data["CNES"]
+    new_wb.active.cell(row=row, column=26).value = data["State"]
+    new_wb.active.cell(row=row, column=27).value = data["City"]
+    new_wb.active.cell(row=row, column=28).value = data["ZIP Code (sheet)"]
+    new_wb.active.cell(row=row, column=29).value = data["ZIP Code (site)"]
+    new_wb.active.cell(row=row, column=30).value = data["Address (sheet)"]
+    new_wb.active.cell(row=row, column=31).value = data["Address (site)"]
+    new_wb.active.cell(row=row, column=32).value = data["Latitude (Relatorio)"]
+    new_wb.active.cell(row=row, column=33).value = data["Longitude (Relatorio)"]
+    new_wb.active.cell(row=row, column=34).value = data["Latitude (CNES)"]
+    new_wb.active.cell(row=row, column=35).value = data["Longitude (CNES)"]
+    new_wb.active.cell(row=row, column=36).value = data["REGIC Label"]
