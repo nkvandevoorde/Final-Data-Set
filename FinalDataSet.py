@@ -102,13 +102,13 @@ print("Number of Relatório outliers:", len(rel_outliers))
 cnes_library = {}
 for excel_row, row in enumerate(cnes_wb.iter_rows(min_row=2, values_only=True), start=2):
     cnes_library[excel_row] = {
-        "state": row[0],  # State in column A
-        "city": row[1],   # City in column B
+        "State": row[0],  # State in column A
+        "City": row[1],   # City in column B
         "CNES": row[2],   # CNES in column C
-        "latitude": row[3], # Latitude in column D
-        "longitude": row[4], # Longitude in column E
+        "Latitude": row[3], # Latitude in column D
+        "Longitude": row[4], # Longitude in column E
         "REGIC Label": row[5], # REGIC Label in column F
-        "address": row[6], # Address in column G
+        "Address": row[6], # Address in column G
         }
 print(list(cnes_library.items())[:5])
 
@@ -116,15 +116,15 @@ print(list(cnes_library.items())[:5])
 rel_library = {}
 for excel_row, row in enumerate(rel_wb.iter_rows(min_row=2, values_only=True), start=2):
         rel_library[excel_row] = {
-            "state": row[0],  # State in column A
+            "State": row[0],  # State in column A
             "CNES": row[1],   # CNES in column B
-            "city": row[2],   # City in column C
+            "City": row[2],   # City in column C
             "ZIP Code (sheet)": row[3], # ZIP Code in column D
-            "address (sheet)": row[4], # Address in column E
-            "latitude": row[6], # Latitude in column G
-            "longitude": row[7], # Longitude in column H
+            "Address (sheet)": row[4], # Address in column E
+            "Latitude": row[6], # Latitude in column G
+            "Longitude": row[7], # Longitude in column H
             "ZIP Code (site)": row[10], # ZIP Code in column K
-            "address (site)": row[11], # Address in column L
+            "Address (site)": row[11], # Address in column L
         }
 
 print(list(rel_library.items())[:5])
